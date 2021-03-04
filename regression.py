@@ -11,10 +11,6 @@ sns.set()
 
 df = pd.read_csv("BostonHousingData.csv")  # loading the csv file
 
-
-# print(df.head())
-# df = df._get_numeric_data() # working with only numeric data
-
 def multiple_lr():
     # print("\nMLR Model \n")
     mlr = LinearRegression()
