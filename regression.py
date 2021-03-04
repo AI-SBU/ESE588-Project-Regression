@@ -11,6 +11,7 @@ sns.set()
 
 df = pd.read_csv("BostonHousingData.csv")  # loading the csv file
 
+
 def multiple_lr():
     # print("\nMLR Model \n")
     mlr = LinearRegression()
@@ -20,9 +21,10 @@ def multiple_lr():
     yhat = mlr.predict(x)
     x_coef = mlr.coef_
     x_list = []
-    for l in x_coef:
-        for name in l:
-            x_list.append(name) # 1d list
+    for col in x_coef:
+        for name in col:
+            x_list.append(name)  # 1d list
+    # noinspection SpellCheckingInspection
     x_names = ["CRIM", "ZN", "NOX", "RM", "AGE", "RAD", "PTRATIO", "LSTAT"]
     dict_one = {x_names[i]: x_list[i] for i in
                 range(len(x_names))}  # making dict with names as keys and coef as values
