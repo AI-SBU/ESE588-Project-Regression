@@ -1,13 +1,8 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error as mse
-from sklearn.metrics import r2_score
 import statsmodels.api as sm
 from scipy import stats
-import math
 
 sns.set()
 
@@ -47,7 +42,9 @@ def multiple_lr():
     yhat.columns = ["Predicted MEDV"]
     # print(yhat)
     # print(mlr.summary())
-    distribution_plot(y, yhat)
+    with open("summary.txt", "w") as file:
+        file.write(mlr.summary(alpha=.05).as_text())
+    # distribution_plot(y, yhat)
 
 
 multiple_lr()
