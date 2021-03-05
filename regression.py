@@ -4,37 +4,50 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error as mse
+from sklearn.metrics import r2_score
+import statsmodels.api as sm
 from scipy import stats
 import math
 
 sns.set()
 
-df = pd.read_csv("BostonHousingData.csv")  # loading the csv file
+
+def distribution_plot(actual, predicted):
+    y_vals = pd.concat([actual, predicted])
+    y_vals.plot.kde()
+    plt.title("MEDV Distribution : Actual vs Predicted")
+    plt.xlabel("MEDV")
+    plt.show()
+
+
+def auction_example_book():
+    data = pd.read_csv("auction.txt", sep="\t")
+    # print(data)
+    x_names = ["AGE", "NUMBIDS"]  # independent vars list
+    y = data[["PRICE"]]
+    x = data[x_names]
+    mlr = sm.OLS(y, x)
+    mlr = mlr.fit()
+    yhat = mlr.predict(x)
+    data["yhat"] = yhat
+    data.drop(columns=["AGE-BID"], inplace=True)
+    fval, pval = stats.f_oneway(data["AGE"], data["NUMBIDS"])
+    print("F-test ", fval, "\nP-val : ", pval)
+    # print(data)
 
 
 def multiple_lr():
-    # print("\nMLR Model \n")
-    mlr = LinearRegression()
+    df = pd.read_csv("BostonHousingData.csv")  # loading the csv file
+    x_names = ["CRIM", "ZN", "INDUS", "NOX", "RM", "TAX", "PTRATIO", "LSTAT"]  # independent vars list
     y = df[["MEDV"]]
-    x = df[["CRIM", "ZN", "NOX", "RM", "AGE", "RAD", "PTRATIO", "LSTAT"]]
-    mlr.fit(x, y)
+    x = df[x_names]
+    mlr = sm.OLS(y, x).fit()
     yhat = mlr.predict(x)
-    x_coef = mlr.coef_
-    x_list = []
-    for col in x_coef:
-        for name in col:
-            x_list.append(name)  # 1d list
-    # noinspection SpellCheckingInspection
-    x_names = ["CRIM", "ZN", "NOX", "RM", "AGE", "RAD", "PTRATIO", "LSTAT"]
-    dict_one = {x_names[i]: x_list[i] for i in
-                range(len(x_names))}  # making dict with names as keys and coef as values
-    dict_two = {"Y-Intercept : ": mlr.intercept_, "R-Square : ": mlr.score(x, y),
-                "RMSE : ": math.sqrt(mse(df["MEDV"], yhat))}
-
-    dict_merged = {**dict_one, **dict_two}
-    mlr_data = pd.DataFrame(dict_merged)
-    print(mlr_data)
-    # mlr_data.to_excel("mlr_data.xlsx")
+    yhat = pd.DataFrame(yhat)
+    yhat.columns = ["Predicted MEDV"]
+    # print(yhat)
+    # print(mlr.summary())
+    distribution_plot(y, yhat)
 
 
 multiple_lr()
