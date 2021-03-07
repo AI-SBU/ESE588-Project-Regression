@@ -3,8 +3,8 @@
 Dep. Variable:                   MEDV   R-squared:                       0.707
 Model:                            OLS   Adj. R-squared:                  0.698
 Method:                 Least Squares   F-statistic:                     78.72
-Date:                Sat, 06 Mar 2021   Prob (F-statistic):          6.42e-120
-Time:                        22:08:57   Log-Likelihood:                -1529.9
+Date:                Sun, 07 Mar 2021   Prob (F-statistic):          6.42e-120
+Time:                        13:37:55   Log-Likelihood:                -1529.9
 No. Observations:                 506   AIC:                             3092.
 Df Residuals:                     490   BIC:                             3159.
 Df Model:                          15                                         

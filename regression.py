@@ -33,7 +33,9 @@ def distribution_plot(actual, predicted):
     y_vals.plot.kde()   # plots kernel distribution plot
     plt.title("MEDV Distribution : Actual vs Predicted")
     plt.xlabel("MEDV")
+    plt.savefig("distribution.png")
     plt.show()
+
 
 
 """
