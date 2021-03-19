@@ -32,6 +32,14 @@ def count_plot(column_name, dataframe):
     plt.show()
 
 
+def heat_map(confusion):  # to visualize the confusion matrix
+    sns.heatmap(confusion, annot=True, fmt="g")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.show()
+
+
 """
 
 The function below is used to find multicollinearity using the variance inflation factor (VIF). A high values of
@@ -58,7 +66,7 @@ The parameter represents the dataframe that containing all of the features
 """
 
 
-def multiple_lr(x, y, yhat_name, file_path, response_var):
+def multiple_lr(x, y, file_path, response_var):
     x = sm.add_constant(x)  # adding intercept
     mlr = sm.OLS(y, x).fit()  # fitting the model
     yhat = mlr.predict(x)  # predicting all of the y values
@@ -90,7 +98,7 @@ def boston_housing():
     y = df[[response_var]]
     x = df[x_names]
     file_path = "BostonHousingDataset/summary.txt"
-    multiple_lr(x, y, "Predicted MEDV", file_path, response_var)
+    multiple_lr(x, y, file_path, response_var)
 
 
 def grid_stability():
@@ -103,7 +111,7 @@ def grid_stability():
     x = sm.add_constant(x)
     # splitting the data into train(90%) and test(10%)
     # random state is set to a integer to randomly sample the data for test and training
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.1, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.2, random_state=42)
 
     x_train = sm.add_constant(x_train)
     log_reg = sm.Logit(y_train, x_train).fit()
@@ -113,10 +121,12 @@ def grid_stability():
     prediction = list(map(round, yhat))
     cm = confusion_matrix(y_test, prediction)
     print("Confusion matrix: \n", cm)
-    # print("Test accuracy: ", accuracy_score(y_test, prediction))
-    # print(log_reg.summary(0.5))
-    # count_plot(response_var[0], df)
+    print("Test accuracy: ", accuracy_score(y_test, prediction))
     print(classification_report(y_test, prediction))
+    print(log_reg.summary(0.5))
+    count_plot(response_var[0], df)
+    heat_map(cm)
+
 
 
 # boston_housing()
