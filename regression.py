@@ -5,6 +5,7 @@ import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor  # dealing with multicollinearity
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (confusion_matrix, accuracy_score)
+from sklearn.metrics import classification_report
 
 sns.set()
 
@@ -110,13 +111,12 @@ def grid_stability():
 
     yhat = log_reg.predict(x_test)
     prediction = list(map(round, yhat))
-    # print(prediction)
-    # cm = confusion_matrix(y_test, prediction)
-    # print("Confusion matrix: ", cm)
+    cm = confusion_matrix(y_test, prediction)
+    print("Confusion matrix: \n", cm)
     # print("Test accuracy: ", accuracy_score(y_test, prediction))
     # print(log_reg.summary(0.5))
-    # distribution_plot(y_test, yhat, "stabf")
-    count_plot(response_var[0], df)
+    # count_plot(response_var[0], df)
+    print(classification_report(y_test, prediction))
 
 
 # boston_housing()
