@@ -4,7 +4,7 @@ import seaborn as sns
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor  # dealing with multicollinearity
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import (confusion_matrix,accuracy_score)
+from sklearn.metrics import (confusion_matrix, accuracy_score)
 
 sns.set()
 
@@ -22,6 +22,12 @@ def distribution_plot(actual, predicted, name):
     plt.title("Actual vs Predicted")
     plt.xlabel(name)
     plt.savefig("distribution.png")
+    plt.show()
+
+
+def count_plot(column_name, dataframe):
+    sns.countplot(x=column_name, data=dataframe)
+    plt.title("Outcome: Positive vs Negative")
     plt.show()
 
 
@@ -86,22 +92,32 @@ def boston_housing():
     multiple_lr(x, y, "Predicted MEDV", file_path, response_var)
 
 
-def red_wine():
+def grid_stability():
     df = pd.read_csv("Chosen/Data_for_UCI_named_1.csv")
-    response_var = ["stabf"]
-    predictor_var = ["tau1", "p1", "p2", "p3", "g1", "g2", "g3", "g4"]
+    response_var = ["stabf"]  # the response var
+    predictor_var = ["tau1", "p1", "p2", "p3", "g1", "g2", "g3", "g4"]  # predictor var
+
     x = df[predictor_var]
     y = df[response_var]
     x = sm.add_constant(x)
-    log_reg = sm.Logit(y, x).fit()
-    yhat = log_reg.predict(x)
-    prediction = list(map(round, yhat))
-    cm = confusion_matrix(y, prediction)
-    print("Confusion matrix: ", cm)
-    print("Test accuracy: ", accuracy_score(y, prediction))
-    # print(log_reg.summary(0.5))
+    # splitting the data into train(90%) and test(10%)
+    # random state is set to a integer to randomly sample the data for test and training
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.1, random_state=42)
 
+    x_train = sm.add_constant(x_train)
+    log_reg = sm.Logit(y_train, x_train).fit()
+    # print(x_train)
+
+    yhat = log_reg.predict(x_test)
+    prediction = list(map(round, yhat))
+    # print(prediction)
+    # cm = confusion_matrix(y_test, prediction)
+    # print("Confusion matrix: ", cm)
+    # print("Test accuracy: ", accuracy_score(y_test, prediction))
+    # print(log_reg.summary(0.5))
+    # distribution_plot(y_test, yhat, "stabf")
+    count_plot(response_var[0], df)
 
 
 # boston_housing()
-red_wine()
+grid_stability()
