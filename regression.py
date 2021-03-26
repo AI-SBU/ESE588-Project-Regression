@@ -1,9 +1,11 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor  # dealing with multicollinearity
 from sklearn.model_selection import train_test_split
+from sklearn.utils import resample
 from sklearn.metrics import (confusion_matrix, accuracy_score)
 from sklearn.metrics import classification_report
 
@@ -23,21 +25,23 @@ def distribution_plot(actual, predicted, name):
     plt.title("Actual vs Predicted")
     plt.xlabel(name)
     plt.savefig("distribution.png")
-    plt.show()
+    # plt.show()
 
 
-def count_plot(column_name, dataframe):
+def count_plot(column_name, dataframe, model_name, file_path):
     sns.countplot(x=column_name, data=dataframe)
     plt.title("Outcome: Positive vs Negative")
-    plt.show()
+    plt.savefig(file_path + model_name + "_count_plot.png")
+    # plt.show()
 
 
-def heat_map(confusion):  # to visualize the confusion matrix
+def heat_map(confusion, model_name, file_path):  # to visualize the confusion matrix
     sns.heatmap(confusion, annot=True, fmt="g")
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
-    plt.show()
+    plt.savefig(file_path + model_name + "_cm_heat_map.png")
+    # plt.show()
 
 
 """
@@ -101,32 +105,84 @@ def boston_housing():
     multiple_lr(x, y, file_path, response_var)
 
 
+"""
+The function below performs up-sampling on the Grid-Stability dataset
+returns the newly upsampled dataset
+"""
+
+
+def grid_stability_upsampled_model(df):
+    # Separate
+    df_majority = df[df.stabf == 0]
+    df_minority = df[df.stabf == 1]
+
+    majority_counts = len(df_majority)  # 6,380 counts of 0
+
+    # Upsampling
+    df_minority_upsampled = resample(df_minority,
+                                     replace=True,
+                                     n_samples=majority_counts,
+                                     random_state=42)
+
+    #  Combine majority class with upsampled minority class
+    df_upsampled = pd.concat([df_majority, df_minority_upsampled])
+    return df_upsampled
+
+
+def grid_stability_downsampled_model(df):
+    df_majority = df[df.stabf == 0]
+    df_minority = df[df.stabf == 1]
+
+    minority_counts = len(df_minority)  # 10,000 - 6,380 counts of 0
+
+    df_majority_downsampled = resample(df_majority,
+                                       replace=False,
+                                       n_samples=minority_counts,
+                                       random_state=42)
+
+    df_downsampled = pd.concat([df_majority_downsampled, df_minority])
+
+    print(df_downsampled.stabf.value_counts())
+    return df_downsampled
+
+
 def grid_stability():
     df = pd.read_csv("Chosen/Data_for_UCI_named_1.csv")
     response_var = ["stabf"]  # the response var
     predictor_var = ["tau1", "p1", "p2", "p3", "g1", "g2", "g3", "g4"]  # predictor var
+    model_name = "Downsampled"
+    file_path = "Chosen/modelThree_downsampled/"
+
+    # df = grid_stability_upsampled_model(df)
+    df = grid_stability_downsampled_model(df)
 
     x = df[predictor_var]
     y = df[response_var]
     x = sm.add_constant(x)
-    # splitting the data into train(90%) and test(10%)
+
+    # splitting the data into train(80%) and test(20%)
     # random state is set to a integer to randomly sample the data for test and training
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.2, random_state=42)
-
-    x_train = sm.add_constant(x_train)
     log_reg = sm.Logit(y_train, x_train).fit()
-    # print(x_train)
-
     yhat = log_reg.predict(x_test)
-    prediction = list(map(round, yhat))
-    cm = confusion_matrix(y_test, prediction)
-    print("Confusion matrix: \n", cm)
-    print("Test accuracy: ", accuracy_score(y_test, prediction))
-    print(classification_report(y_test, prediction))
-    print(log_reg.summary(0.5))
-    count_plot(response_var[0], df)
-    heat_map(cm)
 
+    # print(np.unique(yhat))
+    prediction = list(map(round, yhat))  # rounding to 1 or 0
+    # cm = confusion_matrix(y_test, prediction)
+    # print("Confusion matrix: \n", cm)
+
+    # print("Test accuracy: ", accuracy_score(y_test, prediction))
+    # print("Classification Report", classification_report(y_test, prediction))
+    with open(file_path + model_name + "_classification_report.txt", "w") as file:
+        file.write(classification_report(y_test, prediction))
+        file.write("\nTest Accuracy: " + str(accuracy_score(y_test, prediction)))
+        file.write("\n")
+
+    with open(file_path + model_name + "_summary.txt", "w") as file:
+        file.write(log_reg.summary(0.5).as_text())
+    # print(log_reg.summary(0.5))
+    count_plot(response_var[0], df, model_name, file_path)
+    heat_map(confusion_matrix(y_test, prediction), model_name, file_path)
 
 
 # boston_housing()
