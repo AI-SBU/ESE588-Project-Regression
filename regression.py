@@ -5,9 +5,11 @@ import seaborn as sns
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor  # dealing with multicollinearity
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import resample
 from sklearn.metrics import (confusion_matrix, accuracy_score)
 from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
 
 sns.set()
 
@@ -146,6 +148,27 @@ def grid_stability_downsampled_model(df):
     return df_downsampled
 
 
+def grid_stability_random_forest_classifier_model():
+    df = pd.read_csv("Chosen/Data_for_UCI_named_1.csv")
+    response_var = ["stabf"]  # the response var
+    predictor_var = ["tau1", "p1", "p2", "p3", "g1", "g2", "g3", "g4"]  # predictor var
+    model_name = "RandomForestClassifier"
+    file_path = "Chosen/modelThree_randomForest/"
+    x = df[predictor_var]
+    y = df[response_var]
+    # x = sm.add_constant(x)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.2, random_state=42)
+    rfc = RandomForestClassifier()
+    rfc.fit(x_train, np.ravel(y_train))
+    yhat = rfc.predict(x_test)
+    prediction = list(map(round, yhat))
+    print(np.unique(prediction))
+    print(accuracy_score(y_test, prediction))
+    prob_y = rfc.predict_proba(x_test)
+    prob_y = [p[1] for p in prob_y]
+    print(roc_auc_score(y_test, prob_y))
+
+
 def grid_stability():
     df = pd.read_csv("Chosen/Data_for_UCI_named_1.csv")
     response_var = ["stabf"]  # the response var
@@ -173,6 +196,7 @@ def grid_stability():
 
     # print("Test accuracy: ", accuracy_score(y_test, prediction))
     # print("Classification Report", classification_report(y_test, prediction))
+
     with open(file_path + model_name + "_classification_report.txt", "w") as file:
         file.write(classification_report(y_test, prediction))
         file.write("\nTest Accuracy: " + str(accuracy_score(y_test, prediction)))
@@ -187,3 +211,4 @@ def grid_stability():
 
 # boston_housing()
 grid_stability()
+# grid_stability_random_forest_classifier_model()
