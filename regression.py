@@ -9,7 +9,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import resample
 from sklearn.metrics import (confusion_matrix, accuracy_score)
 from sklearn.metrics import classification_report
-from sklearn.metrics import roc_auc_score
 
 sns.set()
 
@@ -121,10 +120,10 @@ def grid_stability_upsampled_model(df):
     majority_counts = len(df_majority)  # 6,380 counts of 0
 
     # Upsampling
-    df_minority_upsampled = resample(df_minority,
-                                     replace=True,
-                                     n_samples=majority_counts,
-                                     random_state=42)
+    df_minority_upsampled = resample(df_minority,  # data to up-sample
+                                     replace=True,  # resamples with replacement
+                                     n_samples=majority_counts,  # total samples needed to match the majority count
+                                     random_state=42)  # random seed
 
     #  Combine majority class with upsampled minority class
     df_upsampled = pd.concat([df_majority, df_minority_upsampled])
@@ -132,17 +131,17 @@ def grid_stability_upsampled_model(df):
 
 
 def grid_stability_downsampled_model(df):
-    df_majority = df[df.stabf == 0]
-    df_minority = df[df.stabf == 1]
+    df_majority = df[df.stabf == 0]  # new dataframe containing majority class
+    df_minority = df[df.stabf == 1]  # new dataframe containing the minority class
 
     minority_counts = len(df_minority)  # 10,000 - 6,380 counts of 0
 
-    df_majority_downsampled = resample(df_majority,
+    df_majority_downsampled = resample(df_majority,  # data to down-sample
                                        replace=False,
-                                       n_samples=minority_counts,
-                                       random_state=42)
+                                       n_samples=minority_counts,  # to match the minority count
+                                       random_state=42)  # random seed
 
-    df_downsampled = pd.concat([df_majority_downsampled, df_minority])
+    df_downsampled = pd.concat([df_majority_downsampled, df_minority])  # combining the new majority with minority
 
     print(df_downsampled.stabf.value_counts())
     return df_downsampled
@@ -164,9 +163,16 @@ def grid_stability_random_forest_classifier_model():
     prediction = list(map(round, yhat))
     print(np.unique(prediction))
     print(accuracy_score(y_test, prediction))
-    prob_y = rfc.predict_proba(x_test)
-    prob_y = [p[1] for p in prob_y]
-    print(roc_auc_score(y_test, prob_y))
+
+
+"""
+The function below builds a logistic regression model on the Electric Grid Stability data set
+It uses 8 predictor variable to predict 1 binary response variable
+All of the predictor variable are numeric (not categorical)
+Change the "file_path" var to a destination of your choice
+The summary/reports/plots will all be saved in this destination
+Leaving it empty will save the files on the project folder
+"""
 
 
 def grid_stability():
@@ -181,32 +187,31 @@ def grid_stability():
 
     x = df[predictor_var]
     y = df[response_var]
-    x = sm.add_constant(x)
+    x = sm.add_constant(x)  # y-intercept
 
     # splitting the data into train(80%) and test(20%)
     # random state is set to a integer to randomly sample the data for test and training
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=.2, random_state=42)
-    log_reg = sm.Logit(y_train, x_train).fit()
-    yhat = log_reg.predict(x_test)
+    log_reg = sm.Logit(y_train, x_train).fit()  # fit the model
+    yhat = log_reg.predict(x_test)  # make predictions using the test features
 
     # print(np.unique(yhat))
-    prediction = list(map(round, yhat))  # rounding to 1 or 0
-    # cm = confusion_matrix(y_test, prediction)
-    # print("Confusion matrix: \n", cm)
-
-    # print("Test accuracy: ", accuracy_score(y_test, prediction))
-    # print("Classification Report", classification_report(y_test, prediction))
+    prediction = list(map(round, yhat))  # rounding to 1 or 0, yhat prior to this has floating point values
+    # threshold is 0.5
 
     with open(file_path + model_name + "_classification_report.txt", "w") as file:
         file.write(classification_report(y_test, prediction))
         file.write("\nTest Accuracy: " + str(accuracy_score(y_test, prediction)))
         file.write("\n")
+        file.close()
 
     with open(file_path + model_name + "_summary.txt", "w") as file:
         file.write(log_reg.summary(0.5).as_text())
+        file.close()
     # print(log_reg.summary(0.5))
-    count_plot(response_var[0], df, model_name, file_path)
-    heat_map(confusion_matrix(y_test, prediction), model_name, file_path)
+    count_plot(response_var[0], df, model_name, file_path)  # visualizing the response var elements using a countplot
+    heat_map(confusion_matrix(y_test, prediction), model_name,
+             file_path)  # visualizing confusion matrix using a heatmap
 
 
 # boston_housing()
